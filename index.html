@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CYBER INTEL // شجرة التحقيق</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Tajawal:wght@300;400;700&display=swap');
+
+:root {
+  --red:       #ff2233;
+  --red-dim:   #cc0011;
+  --red-glow:  rgba(255,34,51,0.55);
+  --red-faint: rgba(255,34,51,0.12);
+  --green:     #00ff88;
+  --green-dim: #00cc66;
+  --cyan:      #00eeff;
+  --bg:        #050508;
+  --panel:     rgba(10,12,18,0.92);
+  --border:    rgba(255,34,51,0.35);
+  --text:      #c8d0e0;
+  --text-dim:  #607080;
+  --mono: 'Share Tech Mono', monospace;
+  --arab: 'Tajawal', sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body {
+  font-family: var(--arab);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: crosshair;
+}
+
+/* ═══════════════════════ BACKGROUND ═══════════════════════ */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.scanline {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center,
+    transparent 50%,
+    rgba(0,0,0,0.7) 100%
+  );
+}
+
+/* ═══════════════════════ HEADER ═══════════════════════ */
+header {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: rgba(5,5,8,0.95);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 0 30px rgba(255,34,51,0.15);
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-box {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--red);
+  line-height: 1.4;
+  text-shadow: 0 0 8px var(--red);
+  letter-spacing: 2px;
+}
+
+.header-title {
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  color: var(--red);
+  text-shadow: 0 0 14px var(--red), 0 0 30px var(--red-dim);
+  letter-spacing: 3px;
+  animation: flicker 8s infinite;
+}
+
+@keyframes flicker {
+  0%,94%,96%,98%,100%{opacity:1}
+  95%,97%{opacity:0.7}
+}
+
+.header-sub {
+  font-family: var(--arab);
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-chip {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--green);
+  text-shadow: 0 0 8px var(--green);
+  background: rgba(0,255,136,0.06);
+  border: 1px solid rgba(0,255,136,0.2);
+  border-radius: 4px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  animation: blink 2s step-end infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ═══════════════════════ MAIN LAYOUT ═══════════════════════ */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+}
+
+/* ═══════════════════════ SIDEBAR ═══════════════════════ */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.collapsed {
+  width: 0;
+  border-left: none;
+  opacity: 0;
+}
+
+.sidebar-content {
+  width: 240px; /* يحافظ على عرض المحتوى أثناء طي اللوحة */
+}
+
+.sidebar-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,34,51,0.15);
+}
+
+.sidebar-label {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--red-dim);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  text-shadow: 0 0 6px var(--red-dim);
+}
+
+/* Buttons */
+.btn {
+  font-family: var(--arab);
+  font-size: 0.88rem;
+  font-weight: 500;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+  text-align: right;
+}
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.btn:hover::before { opacity: 1; }
+.btn:hover { transform: translateX(-2px); }
+.btn:active { transform: translateX(0) scale(0.98); }
+
+.btn-add {
+  color: var(--red);
+  border-color: rgba(255,34,51,0.4);
+  text-shadow: 0 0 8px var(--red);
+}
+.btn-add::before { background: rgba(255,34,51,0.08); }
+.btn-add:hover {
+  border-color: var(--red);
+  box-shadow: 0 0 16px rgba(255,34,51,0.3), inset 0 0 16px rgba(255,34,51,0.05);
+}
+
+.btn-edit {
+  color: var(--cyan);
+  border-color: rgba(0,238,255,0.3);
+  text-shadow: 0 0 8px var(--cyan);
+}
+.btn-edit::before { background: rgba(0,238,255,0.05); }
+.btn-edit:hover {
+  border-color: var(--cyan);
+  box-shadow: 0 0 16px rgba(0,238,255,0.2);
+}
+
+.btn-del {
+  color: #ff7755;
+  border-color: rgba(255,119,85,0.3);
+}
+.btn-del::before { background: rgba(255,119,85,0.06); }
+.btn-del:hover {
+  border-color: #ff7755;
+  box-shadow: 0 0 16px rgba(255,119,85,0.2);
+}
+
+.btn-secondary {
+  color: var(--text-dim);
+  border-color: rgba(180,200,220,0.15);
+  font-size: 0.82rem;
+}
+.btn-secondary:hover {
+  color: var(--text);
+  border-color: rgba(180,200,220,0.35);
+}
+
+/* Info panel in sidebar */
+.info-box {
+  background: rgba(255,34,51,0.05);
+  border: 1px solid rgba(255,34,51,0.2);
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+  min-height: 70px;
+}
+.info-box .hl { color: var(--red); text-shadow: 0 0 6px var(--red); }
+.info-box .hl2 { color: var(--cyan); }
+
+/* Node type selector */
+.type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 4px;
+}
+.type-btn {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  padding: 7px 6px;
+  border: 1px solid rgba(255,34,51,0.25);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+}
+.type-btn:hover, .type-btn.active {
+  border-color: var(--red);
+  color: var(--red);
+  background: rgba(255,34,51,0.08);
+  text-shadow: 0 0 6px var(--red);
+}
+
+/* Shortcuts */
+.shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+.shortcut-row kbd {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  background: rgba(255,34,51,0.1);
+  border: 1px solid rgba(255,34,51,0.3);
+  color: var(--red);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* ═══════════════════════ CANVAS AREA ═══════════════════════ */
+.canvas-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+#treeCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+#treeCanvas:active {
+  cursor: grabbing;
+}
+
+/* empty state */
+.empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  gap: 12px;
+  opacity: 0.35;
+  transition: opacity 0.5s;
+}
+.empty-state.hidden { opacity: 0; }
+.empty-icon {
+  font-family: var(--mono);
+  font-size: 2.5rem;
+  color: var(--red);
+  text-shadow: 0 0 20px var(--red);
+}
+.empty-text {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-align: center;
+  line-height: 1.8;
+}
+
+/* Toggle Settings Button */
+.toggle-sidebar-btn {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 100;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(10,12,18,0.92);
+  border: 1px solid var(--red);
+  color: var(--red);
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(255,34,51,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+.toggle-sidebar-btn:hover {
+  background: rgba(255,34,51,0.15);
+  box-shadow: 0 0 30px rgba(255,34,51,0.4);
+  transform: scale(1.1) rotate(90deg);
+}
+
+/* ═══════════════════════ MODAL ═══════════════════════ */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+.overlay.active { display: flex; }
+
+.modal {
+  background: rgba(8,10,15,0.98);
+  border: 1px solid var(--red);
+  border-radius: 6px;
+  padding: 28px 26px;
+  width: 360px;
+  box-shadow: 0 0 60px rgba(255,34,51,0.35), 0 0 120px rgba(255,34,51,0.1);
+  animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+}
+.modal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+}
+@keyframes modalIn {
+  from { transform: scale(0.85) translateY(-20px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.modal-title {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--red);
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px var(--red);
+  margin-bottom: 18px;
+}
+
+.modal-field {
+  margin-bottom: 14px;
+}
+.modal-field label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.modal-field input, .modal-field select {
+  width: 100%;
+  font-family: var(--arab);
+  font-size: 0.95rem;
+  padding: 10px 14px;
+  background: rgba(255,34,51,0.04);
+  border: 1px solid rgba(255,34,51,0.35);
+  border-radius: 3px;
+  color: var(--text);
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+  text-align: right;
+  direction: rtl;
+}
+.modal-field input:focus, .modal-field select:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 14px rgba(255,34,51,0.25);
+}
+.modal-field select option { background: #0a0c12; }
+
+.modal-field textarea {
+  width: 100%;
+  font-family: var(--arab);
+  font-size: 0.88rem;
+  padding: 10px 14px;
+  background: rgba(255,34,51,0.04);
+  border: 1px solid rgba(255,34,51,0.35);
+  border-radius: 3px;
+  color: var(--text);
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+  text-align: right;
+  direction: rtl;
+  transition: border 0.2s;
+}
+.modal-field textarea:focus { border-color: var(--red); box-shadow: 0 0 14px rgba(255,34,51,0.2); }
+
+.modal-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  margin-top: 20px;
+}
+.mbtn {
+  font-family: var(--arab);
+  font-size: 0.88rem;
+  padding: 9px 22px;
+  border-radius: 3px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: transparent;
+}
+.mbtn-confirm {
+  color: var(--red);
+  border-color: var(--red);
+  text-shadow: 0 0 6px var(--red);
+}
+.mbtn-confirm:hover {
+  background: rgba(255,34,51,0.12);
+  box-shadow: 0 0 20px rgba(255,34,51,0.3);
+}
+.mbtn-cancel {
+  color: var(--text-dim);
+  border-color: rgba(180,200,220,0.2);
+}
+.mbtn-cancel:hover { color: var(--text); border-color: rgba(180,200,220,0.4); }
+
+/* ═══════════════════════ CONTEXT MENU ═══════════════════════ */
+.ctx-menu {
+  display: none;
+  position: fixed;
+  z-index: 300;
+  background: rgba(8,10,15,0.97);
+  border: 1px solid rgba(255,34,51,0.45);
+  border-radius: 4px;
+  min-width: 170px;
+  box-shadow: 0 0 30px rgba(255,34,51,0.25);
+  overflow: hidden;
+}
+.ctx-menu.active { display: block; }
+.ctx-item {
+  font-family: var(--arab);
+  font-size: 0.85rem;
+  padding: 10px 16px;
+  cursor: pointer;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255,34,51,0.1);
+  transition: all 0.12s;
+  direction: rtl;
+}
+.ctx-item:last-child { border-bottom: none; }
+.ctx-item:hover { background: rgba(255,34,51,0.1); color: var(--red); }
+.ctx-item.danger:hover { background: rgba(255,119,85,0.1); color: #ff7755; }
+.ctx-item .ci { font-size: 1rem; min-width: 18px; }
+
+/* ═══════════════════════ TOOLTIP ═══════════════════════ */
+.tooltip {
+  position: fixed;
+  z-index: 150;
+  background: rgba(8,10,15,0.95);
+  border: 1px solid rgba(255,34,51,0.4);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  max-width: 240px;
+  line-height: 1.6;
+}
+.tooltip.show { opacity: 1; }
+.tooltip .tt-name { color: var(--red); font-size: 0.78rem; display: block; margin-bottom: 2px; }
+.tooltip .tt-type { color: var(--cyan); font-size: 0.65rem; letter-spacing: 1px; }
+.tooltip .tt-note { color: var(--text-dim); font-size: 0.68rem; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="scanline"></div>
+<div class="vignette"></div>
+
+<header>
+  <div class="header-left">
+    <div class="logo-box">◢◤<br>SYS</div>
+    <div>
+      <div class="header-title">INTEL TREE // شجرة التحقيق</div>
+      <div class="header-sub">Cyber Investigation Framework v2.4</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="stat-chip" id="chipNodes">NODES: 0</div>
+    <div class="stat-chip" id="chipDepth">DEPTH: 0</div>
+    <div class="stat-chip" id="chipEdges">LINKS: 0</div>
+    <div class="status-dot"></div>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="canvas-wrap">
+    <svg id="treeCanvas" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="neonRed" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="b1"/>
+          <feGaussianBlur stdDeviation="8" result="b2"/>
+          <feMerge>
+            <feMergeNode in="b2"/>
+            <feMergeNode in="b1"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <filter id="neonNode" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="5" result="b"/>
+          <feMerge>
+            <feMergeNode in="b"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <filter id="textGlow">
+          <feGaussianBlur stdDeviation="2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <marker id="arrowRed" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#ff2233" opacity="0.8"/>
+        </marker>
+      </defs>
+      <g id="linksG"></g>
+      <g id="nodesG"></g>
+    </svg>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">⬡</div>
+      <div class="empty-text">
+        // NO DATA LOADED //<br>
+        أضف عقدة جذر للبدء<br>
+        <span style="font-size:0.65rem;opacity:0.6">[ N ] ADD ROOT NODE</span>
+      </div>
+    </div>
+
+    <button id="toggleSidebarBtn" class="toggle-sidebar-btn" title="Toggle Controls">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div class="sidebar collapsed" id="sidebarPanel">
+    <div class="sidebar-content">
+      <div class="sidebar-section">
+        <div class="sidebar-label">// ACTIONS</div>
+        <button class="btn btn-add" onclick="openAdd()">⊕ إضافة عقدة</button>
+        <button class="btn btn-edit" onclick="openEdit()">✎ تعديل العقدة</button>
+        <button class="btn btn-del" onclick="deleteSelected()">⊗ حذف العقدة</button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">// NODE TYPE</div>
+        <div class="type-grid" id="typeGrid">
+          <button class="type-btn active" data-type="TARGET">TARGET</button>
+          <button class="type-btn" data-type="SUSPECT">SUSPECT</button>
+          <button class="type-btn" data-type="IP">IP/HOST</button>
+          <button class="type-btn" data-type="DOMAIN">DOMAIN</button>
+          <button class="type-btn" data-type="FILE">FILE</button>
+          <button class="type-btn" data-type="LINK">LINK</button>
+          <button class="type-btn" data-type="PERSON">PERSON</button>
+          <button class="type-btn" data-type="ORG">ORG</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">// SELECTED NODE</div>
+        <div class="info-box" id="infoBox">
+          <span class="hl">[ IDLE ]</span><br>
+          لا توجد عقدة محددة<br>
+          <span style="color:#304050;font-size:0.65rem">انقر على عقدة لعرض بياناتها</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">// VIEW</div>
+        <button class="btn btn-secondary" onclick="expandAll()">▼ توسيع الكل</button>
+        <button class="btn btn-secondary" onclick="collapseAll()">▶ طي الكل</button>
+        <button class="btn btn-secondary" onclick="centerView()">⊙ توسيط العرض</button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">// SHORTCUTS</div>
+        <div class="shortcut-row"><span>إضافة</span><kbd>N</kbd></div>
+        <div class="shortcut-row"><span>تعديل</span><kbd>E</kbd></div>
+        <div class="shortcut-row"><span>حذف</span><kbd>Del</kbd></div>
+        <div class="shortcut-row"><span>توسيط</span><kbd>Space</kbd></div>
+        <div class="shortcut-row"><span>إلغاء</span><kbd>Esc</kbd></div>
+      </div>
+
+      <div class="sidebar-section">
+        <button class="btn btn-secondary" onclick="resetTree()" style="color:#ff7755;border-color:rgba(255,119,85,0.3)">⚠ إعادة ضبط الكل</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-item" onclick="ctxAdd()"><span class="ci">⊕</span> إضافة فرع</div>
+  <div class="ctx-item" onclick="ctxEdit()"><span class="ci">✎</span> تعديل</div>
+  <div class="ctx-item" onclick="ctxCollapse()"><span class="ci">▶</span> طي / توسيع</div>
+  <div class="ctx-item danger" onclick="ctxDelete()"><span class="ci">⊗</span> حذف</div>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <span class="tt-name" id="ttName"></span>
+  <span class="tt-type" id="ttType"></span>
+  <div class="tt-note" id="ttNote"></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">// ADD NODE</div>
+    <div class="modal-field">
+      <label>// NODE LABEL</label>
+      <input type="text" id="inpName" placeholder="اسم العقدة..." maxlength="32"/>
+    </div>
+    <div class="modal-field">
+      <label>// TYPE</label>
+      <select id="inpType">
+        <option value="TARGET">TARGET</option>
+        <option value="SUSPECT">SUSPECT</option>
+        <option value="IP">IP/HOST</option>
+        <option value="DOMAIN">DOMAIN</option>
+        <option value="FILE">FILE</option>
+        <option value="LINK">LINK</option>
+        <option value="PERSON">PERSON</option>
+        <option value="ORG">ORG</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>// NOTES (اختياري)</label>
+      <textarea id="inpNote" placeholder="ملاحظات..."></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-confirm" onclick="confirmModal()">CONFIRM ▶</button>
+      <button class="mbtn mbtn-cancel" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// BACKGROUND: Matrix rain + grid
+// ══════════════════════════════════════════════════
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+
+  // Grid
+  function drawGrid(){
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.fillStyle = '#050508';
+    ctx.fillRect(0,0,c.width,c.height);
+    const sz = 40;
+    ctx.strokeStyle = 'rgba(255,34,51,0.06)';
+    ctx.lineWidth = 0.5;
+    for(let x=0;x<c.width;x+=sz){
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,c.height); ctx.stroke();
+    }
+    for(let y=0;y<c.height;y+=sz){
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(c.width,y); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(255,34,51,0.03)';
+    for(let i=-c.height;i<c.width;i+=80){
+      ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i+c.height,c.height); ctx.stroke();
+    }
+  }
+
+  // Matrix chars
+  const cols = Math.floor(innerWidth / 20);
+  const drops = Array.from({length:cols}, ()=>Math.random()*-50);
+  const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン!@#$%^&*<>[]{}';
+
+  function matrixFrame(){
+    drawGrid();
+    ctx.font = '12px "Share Tech Mono", monospace';
+    drops.forEach((y,i)=>{
+      const ch = chars[Math.floor(Math.random()*chars.length)];
+      const x = i * 20;
+      const alpha = Math.random()*0.04 + 0.01;
+      ctx.fillStyle = `rgba(255,34,51,${alpha})`;
+      ctx.fillText(ch, x, y*20);
+      if(y*20 > c.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i] += 0.15;
+    });
+    requestAnimationFrame(matrixFrame);
+  }
+  matrixFrame();
+})();
+
+// ══════════════════════════════════════════════════
+// TOGGLE SIDEBAR
+// ══════════════════════════════════════════════════
+document.getElementById('toggleSidebarBtn').addEventListener('click', () => {
+  const sidebar = document.getElementById('sidebarPanel');
+  sidebar.classList.toggle('collapsed');
+  // Re-render canvas slightly after CSS transition to center items correctly
+  setTimeout(render, 300);
+});
+
+// ══════════════════════════════════════════════════
+// TREE DATA
+// ══════════════════════════════════════════════════
+let uid = 1;
+function mkId(){ return uid++; }
+
+function mkNode(name, type='TARGET', note='', parentId=null){
+  return { id:mkId(), name, type, note, parentId, children:[], collapsed:false };
+}
+
+let root = null;
+let selectedId = null;
+let modalMode = 'add'; // 'add' | 'edit'
+let currentType = 'TARGET';
+
+// Pan / Zoom state
+let panX = 0, panY = 0, zoom = 1;
+let isPanning = false, panStart = {x:0,y:0};
+
+// ══════════════════════════════════════════════════
+// NODE COLORS BY TYPE
+// ══════════════════════════════════════════════════
+const TYPE_COLOR = {
+  TARGET:  '#ff2233',
+  SUSPECT: '#ff6600',
+  IP:      '#00eeff',
+  DOMAIN:  '#cc44ff',
+  FILE:    '#ffdd00',
+  LINK:    '#00ff88',
+  PERSON:  '#ff88aa',
+  ORG:     '#4488ff',
+};
+const TYPE_ICON = {
+  TARGET:'⬡', SUSPECT:'◉', IP:'⊛', DOMAIN:'⊕',
+  FILE:'▣', LINK:'⊞', PERSON:'⊙', ORG:'⊟'
+};
+
+// ══════════════════════════════════════════════════
+// LAYOUT
+// ══════════════════════════════════════════════════
+const LEVEL_H = 110;
+const MIN_SEP = 100;
+
+function layout(node, depth, x, y, w){
+  node._x = x; node._y = y; node._depth = depth;
+  const vis = node.collapsed ? [] : node.children;
+  if(!vis.length) return;
+  const cw = Math.max(MIN_SEP, w / vis.length);
+  const total = cw * vis.length;
+  const sx = x - total/2 + cw/2;
+  vis.forEach((c,i) => layout(c, depth+1, sx+i*cw, y+LEVEL_H, cw*0.9));
+}
+
+// ══════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════
+const svg    = document.getElementById('treeCanvas');
+const linksG = document.getElementById('linksG');
+const nodesG = document.getElementById('nodesG');
+const NS = 'http://www.w3.org/2000/svg';
+
+function render(){
+  const W = svg.clientWidth || 800;
+  const H = svg.clientHeight || 600;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+
+  linksG.innerHTML = ''; nodesG.innerHTML = '';
+
+  document.getElementById('emptyState').classList.toggle('hidden', !!root);
+
+  if(!root){ updateStats(); return; }
+
+  layout(root, 0, W/2 + panX, 60 + panY, W * 0.85 * zoom);
+
+  renderLinks(root);
+  renderNodes(root);
+  updateStats();
+}
+
+function renderLinks(node){
+  const vis = node.collapsed ? [] : node.children;
+  vis.forEach(child => {
+    const path = document.createElementNS(NS,'path');
+    const x1=node._x, y1=node._y, x2=child._x, y2=child._y;
+    const dy = y2-y1;
+    const d = `M${x1},${y1} C${x1},${y1+dy*0.45} ${x2},${y2-dy*0.45} ${x2},${y2}`;
+    path.setAttribute('d',d);
+    path.setAttribute('fill','none');
+    const col = TYPE_COLOR[child.type] || '#ff2233';
+    path.setAttribute('stroke', col);
+    path.setAttribute('stroke-width', Math.max(1, 2.5 - node._depth*0.4));
+    path.setAttribute('opacity','0.75');
+    path.setAttribute('filter','url(#neonRed)');
+    path.setAttribute('stroke-dasharray', child.type==='LINK'?'6 3':'none');
+    path.setAttribute('marker-end','url(#arrowRed)');
+    linksG.appendChild(path);
+
+    // Animated pulse dot
+    const circ = document.createElementNS(NS,'circle');
+    circ.setAttribute('r','3');
+    circ.setAttribute('fill', col);
+    circ.setAttribute('opacity','0.9');
+    circ.setAttribute('filter','url(#neonNode)');
+    const anim = document.createElementNS(NS,'animateMotion');
+    anim.setAttribute('dur', (1.5+Math.random()).toFixed(1)+'s');
+    anim.setAttribute('repeatCount','indefinite');
+    const mp = document.createElementNS(NS,'mpath');
+    const pid = 'p'+Math.random().toString(36).slice(2);
+    path.setAttribute('id',pid);
+    mp.setAttributeNS('http://www.w3.org/1999/xlink','href','#'+pid);
+    anim.appendChild(mp);
+    circ.appendChild(anim);
+    linksG.appendChild(circ);
+
+    renderLinks(child);
+  });
+}
+
+function renderNodes(node){
+  const col = TYPE_COLOR[node.type] || '#ff2233';
+  const isRoot = node._depth === 0;
+  const isSel = node.id === selectedId;
+  const r = isRoot ? 30 : Math.max(18, 26 - node._depth * 4);
+
+  const g = document.createElementNS(NS,'g');
+  g.style.cursor = 'pointer';
+
+  // Selection pulse ring
+  if(isSel){
+    const ring = document.createElementNS(NS,'circle');
+    ring.setAttribute('cx',node._x); ring.setAttribute('cy',node._y);
+    ring.setAttribute('r', r+12);
+    ring.setAttribute('fill','none');
+    ring.setAttribute('stroke',col);
+    ring.setAttribute('stroke-width','1');
+    ring.setAttribute('stroke-dasharray','4 3');
+    ring.setAttribute('opacity','0.6');
+    ring.setAttribute('filter','url(#neonNode)');
+    const animR = document.createElementNS(NS,'animateTransform');
+    animR.setAttribute('attributeName','transform');
+    animR.setAttribute('type','rotate');
+    animR.setAttribute('from',`0 ${node._x} ${node._y}`);
+    animR.setAttribute('to',`360 ${node._x} ${node._y}`);
+    animR.setAttribute('dur','8s');
+    animR.setAttribute('repeatCount','indefinite');
+    ring.appendChild(animR);
+    g.appendChild(ring);
+  }
+
+  // Outer glow ring
+  const glow = document.createElementNS(NS,'circle');
+  glow.setAttribute('cx',node._x); glow.setAttribute('cy',node._y);
+  glow.setAttribute('r',r+4);
+  glow.setAttribute('fill','none');
+  glow.setAttribute('stroke',col);
+  glow.setAttribute('stroke-width',isSel?'2':'1');
+  glow.setAttribute('opacity',isSel?'0.7':'0.3');
+  glow.setAttribute('filter','url(#neonNode)');
+  g.appendChild(glow);
+
+  // Main circle
+  const circle = document.createElementNS(NS,'circle');
+  circle.setAttribute('cx',node._x); circle.setAttribute('cy',node._y);
+  circle.setAttribute('r',r);
+  circle.setAttribute('fill','rgba(5,5,8,0.92)');
+  circle.setAttribute('stroke',col);
+  circle.setAttribute('stroke-width', isSel?'2.5':'1.5');
+  circle.setAttribute('filter','url(#neonNode)');
+  g.appendChild(circle);
+
+  // Icon
+  const icon = document.createElementNS(NS,'text');
+  icon.setAttribute('x',node._x); icon.setAttribute('y',node._y - (isRoot?4:3));
+  icon.setAttribute('text-anchor','middle');
+  icon.setAttribute('dominant-baseline','middle');
+  icon.setAttribute('font-size', isRoot?'16':'13');
+  icon.setAttribute('fill',col);
+  icon.setAttribute('filter','url(#textGlow)');
+  icon.setAttribute('font-family','monospace');
+  icon.textContent = TYPE_ICON[node.type] || '⬡';
+  g.appendChild(icon);
+
+  // Label
+  const label = document.createElementNS(NS,'text');
+  const maxLen = 10;
+  const lbl = node.name.length > maxLen ? node.name.slice(0,maxLen-1)+'…' : node.name;
+  label.setAttribute('x',node._x);
+  label.setAttribute('y',node._y + r + 14);
+  label.setAttribute('text-anchor','middle');
+  label.setAttribute('dominant-baseline','middle');
+  label.setAttribute('font-size','11');
+  label.setAttribute('fill',col);
+  label.setAttribute('font-family',"'Share Tech Mono', monospace");
+  label.setAttribute('filter','url(#textGlow)');
+  label.setAttribute('opacity','0.9');
+  label.textContent = lbl;
+  g.appendChild(label);
+
+  // Type badge
+  const badge = document.createElementNS(NS,'text');
+  badge.setAttribute('x',node._x);
+  badge.setAttribute('y',node._y + r + 26);
+  badge.setAttribute('text-anchor','middle');
+  badge.setAttribute('dominant-baseline','middle');
+  badge.setAttribute('font-size','8');
+  badge.setAttribute('fill','rgba('+hexToRgb(col)+',0.55)');
+  badge.setAttribute('font-family',"'Share Tech Mono', monospace");
+  badge.textContent = node.type;
+  g.appendChild(badge);
+
+  // Child count badge
+  if(node.children.length > 0){
+    const bx = node._x + r*0.72, by = node._y - r*0.72;
+    const bc = document.createElementNS(NS,'circle');
+    bc.setAttribute('cx',bx); bc.setAttribute('cy',by); bc.setAttribute('r','9');
+    bc.setAttribute('fill',node.collapsed?col:'rgba(0,0,0,0.8)');
+    bc.setAttribute('stroke',col); bc.setAttribute('stroke-width','1');
+    g.appendChild(bc);
+    const bt = document.createElementNS(NS,'text');
+    bt.setAttribute('x',bx); bt.setAttribute('y',by);
+    bt.setAttribute('text-anchor','middle'); bt.setAttribute('dominant-baseline','middle');
+    bt.setAttribute('font-size','8'); bt.setAttribute('font-family','monospace');
+    bt.setAttribute('fill', node.collapsed ? '#000' : col);
+    bt.textContent = node.collapsed ? '+' : node.children.length;
+    g.appendChild(bt);
+  }
+
+  // Events
+  g.addEventListener('click', e => { e.stopPropagation(); selectNode(node); });
+  g.addEventListener('dblclick', e => { e.stopPropagation(); toggleCollapse(node); });
+  g.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); selectNode(node); showCtxMenu(e.clientX, e.clientY); });
+  g.addEventListener('mouseenter', e => showTooltip(e, node));
+  g.addEventListener('mouseleave', hideTooltip);
+
+  nodesG.appendChild(g);
+
+  const vis = node.collapsed ? [] : node.children;
+  vis.forEach(renderNodes);
+}
+
+function hexToRgb(hex){
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+
+// ══════════════════════════════════════════════════
+// PAN / ZOOM on canvas (تم التعديل لمساحة لا نهائية و مريحة)
+// ══════════════════════════════════════════════════
+svg.addEventListener('mousedown', e => {
+  // تفعيل السحب عند النقر بالزر الأيسر في الفضاء الفارغ، أو عند الضغط على العجلة الوسطى
+  if(e.button === 1 || e.target === svg || e.target.tagName === 'svg'){
+    isPanning = true;
+    panStart = {x: e.clientX - panX, y: e.clientY - panY};
+  }
+});
+window.addEventListener('mousemove', e => {
+  if(!isPanning) return;
+  panX = e.clientX - panStart.x;
+  panY = e.clientY - panStart.y;
+  render();
+});
+window.addEventListener('mouseup', ()=>{ isPanning=false; });
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  // تم توسيع الحد الأدنى والأقصى للزوم ليكون أريح ومفتوحاً أكثر 
+  zoom = Math.max(0.1, Math.min(5, zoom - e.deltaY * 0.001));
+  render();
+}, {passive:false});
+svg.addEventListener('click', e => {
+  if(e.target === svg || e.target.tagName === 'svg'){
+    selectedId = null; updateInfo(); render();
+  }
+  hideCtxMenu();
+});
+
+// ══════════════════════════════════════════════════
+// SELECTION & INFO
+// ══════════════════════════════════════════════════
+function selectNode(node){
+  selectedId = node.id;
+  currentType = node.type;
+  updateTypeGrid();
+  updateInfo(node);
+  render();
+}
+
+function updateInfo(node){
+  const box = document.getElementById('infoBox');
+  if(!node){
+    box.innerHTML = '<span class="hl">[ IDLE ]</span><br>لا توجد عقدة محددة<br><span style="color:#304050;font-size:0.65rem">انقر على عقدة لعرض بياناتها</span>';
+    return;
+  }
+  const col = TYPE_COLOR[node.type] || '#ff2233';
+  box.innerHTML = `
+    <span class="hl" style="color:${col}">${TYPE_ICON[node.type]} ${node.name}</span><br>
+    <span class="hl2">TYPE:</span> ${node.type}<br>
+    <span class="hl2">DEPTH:</span> ${node._depth ?? '-'}<br>
+    <span class="hl2">CHILDREN:</span> ${node.children.length}
+    ${node.note ? `<br><span style="color:#607080;font-size:0.65rem">${node.note}</span>` : ''}
+  `;
+}
+
+function updateTypeGrid(){
+  document.querySelectorAll('.type-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === currentType);
+  });
+}
+
+document.querySelectorAll('.type-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    currentType = b.dataset.type;
+    updateTypeGrid();
+  });
+});
+
+// ══════════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════════
+function countNodes(n){ return 1 + n.children.reduce((s,c)=>s+countNodes(c),0); }
+function maxDepth(n,d=0){ return n.children.reduce((m,c)=>Math.max(m,maxDepth(c,d+1)),d); }
+function countEdges(n){ return n.children.length + n.children.reduce((s,c)=>s+countEdges(c),0); }
+function updateStats(){
+  if(!root){
+    document.getElementById('chipNodes').textContent = 'NODES: 0';
+    document.getElementById('chipDepth').textContent = 'DEPTH: 0';
+    document.getElementById('chipEdges').textContent = 'LINKS: 0';
+    return;
+  }
+  document.getElementById('chipNodes').textContent = 'NODES: '+countNodes(root);
+  document.getElementById('chipDepth').textContent = 'DEPTH: '+(maxDepth(root)+1);
+  document.getElementById('chipEdges').textContent = 'LINKS: '+countEdges(root);
+}
+
+// ══════════════════════════════════════════════════
+// FIND NODE
+// ══════════════════════════════════════════════════
+function find(node, id){ if(!node) return null; if(node.id===id) return node; for(const c of node.children){ const r=find(c,id); if(r) return r; } return null; }
+function findParent(node, id){ if(!node) return null; for(const c of node.children){ if(c.id===id) return node; const r=findParent(c,id); if(r) return r; } return null; }
+
+// ══════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════
+function openAdd(){
+  if(!root && selectedId === null){
+    modalMode = 'addroot';
+  } else if(selectedId === null && root){
+    selectedId = root.id;
+    modalMode = 'add';
+  } else {
+    modalMode = 'add';
+  }
+  document.getElementById('modalTitle').textContent = '// ADD NODE';
+  document.getElementById('inpName').value = '';
+  document.getElementById('inpNote').value = '';
+  document.getElementById('inpType').value = currentType;
+  document.getElementById('overlay').classList.add('active');
+  setTimeout(()=>document.getElementById('inpName').focus(),80);
+}
+
+function openEdit(){
+  if(!selectedId){ return; }
+  const node = find(root, selectedId);
+  if(!node) return;
+  modalMode = 'edit';
+  document.getElementById('modalTitle').textContent = '// EDIT NODE';
+  document.getElementById('inpName').value = node.name;
+  document.getElementById('inpNote').value = node.note || '';
+  document.getElementById('inpType').value = node.type;
+  document.getElementById('overlay').classList.add('active');
+  setTimeout(()=>document.getElementById('inpName').focus(),80);
+}
+
+function closeModal(){ document.getElementById('overlay').classList.remove('active'); }
+
+function confirmModal(){
+  const name = document.getElementById('inpName').value.trim();
+  const type = document.getElementById('inpType').value;
+  const note = document.getElementById('inpNote').value.trim();
+  if(!name) return;
+
+  if(modalMode === 'addroot'){
+    root = mkNode(name, type, note);
+    selectedId = root.id;
+  } else if(modalMode === 'add'){
+    const parent = selectedId ? find(root, selectedId) : root;
+    if(!parent) return;
+    const n = mkNode(name, type, note, parent.id);
+    parent.children.push(n);
+    parent.collapsed = false;
+    selectedId = n.id;
+    pulseScreen();
+  } else if(modalMode === 'edit'){
+    const node = find(root, selectedId);
+    if(!node) return;
+    node.name = name; node.type = type; node.note = note;
+    currentType = type;
+  }
+
+  closeModal();
+  render();
+  if(selectedId) updateInfo(find(root, selectedId));
+  updateTypeGrid();
+}
+
+function pulseScreen(){
+  const flash = document.createElement('div');
+  flash.style.cssText = 'position:fixed;inset:0;z-index:500;pointer-events:none;background:rgba(255,34,51,0.06);animation:flashOut 0.5s forwards';
+  const st = document.createElement('style');
+  st.textContent = '@keyframes flashOut{from{opacity:1}to{opacity:0}}';
+  document.head.appendChild(st);
+  document.body.appendChild(flash);
+  setTimeout(()=>{ flash.remove(); st.remove(); }, 600);
+}
+
+// ══════════════════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════════════════
+function deleteSelected(){
+  if(!selectedId) return;
+  if(root && selectedId === root.id){
+    root = null; selectedId = null; updateInfo(); render(); return;
+  }
+  const par = findParent(root, selectedId);
+  if(!par) return;
+  par.children = par.children.filter(c=>c.id!==selectedId);
+  selectedId = par.id;
+  updateInfo(par);
+  render();
+}
+
+function toggleCollapse(node){
+  if(node.children.length === 0) return;
+  node.collapsed = !node.collapsed;
+  render();
+}
+
+function expandAll(){ if(!root) return; function w(n){n.collapsed=false;n.children.forEach(w);} w(root); render(); }
+function collapseAll(){ if(!root) return; function w(n,d){if(d>0)n.collapsed=true;n.children.forEach(c=>w(c,d+1));} w(root,0); render(); }
+
+function centerView(){
+  panX = 0; panY = 0; zoom = 1; render();
+}
+
+function resetTree(){
+  if(!confirm('إعادة ضبط الشجرة كاملاً؟')) return;
+  root = null; selectedId = null; uid = 1;
+  panX=0; panY=0; zoom=1;
+  updateInfo(); render();
+}
+
+// ══════════════════════════════════════════════════
+// CONTEXT MENU
+// ══════════════════════════════════════════════════
+const ctxMenu = document.getElementById('ctxMenu');
+function showCtxMenu(x,y){
+  ctxMenu.style.left = x+'px';
+  ctxMenu.style.top  = y+'px';
+  ctxMenu.classList.add('active');
+}
+function hideCtxMenu(){ ctxMenu.classList.remove('active'); }
+function ctxAdd(){ hideCtxMenu(); openAdd(); }
+function ctxEdit(){ hideCtxMenu(); openEdit(); }
+function ctxCollapse(){ hideCtxMenu(); const n=find(root,selectedId); if(n) toggleCollapse(n); }
+function ctxDelete(){ hideCtxMenu(); deleteSelected(); }
+document.addEventListener('click', hideCtxMenu);
+
+// ══════════════════════════════════════════════════
+// TOOLTIP
+// ══════════════════════════════════════════════════
+const tooltip = document.getElementById('tooltip');
+function showTooltip(e, node){
+  document.getElementById('ttName').textContent = node.name;
+  document.getElementById('ttType').textContent = '[ '+node.type+' ]';
+  document.getElementById('ttNote').textContent = node.note || '';
+  tooltip.classList.add('show');
+  moveTooltip(e);
+}
+function moveTooltip(e){
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if(x + 260 > innerWidth) x = e.clientX - 260;
+  if(y + 100 > innerHeight) y = e.clientY - 100;
+  tooltip.style.left = x+'px';
+  tooltip.style.top  = y+'px';
+}
+function hideTooltip(){ tooltip.classList.remove('show'); }
+document.addEventListener('mousemove', e => { if(tooltip.classList.contains('show')) moveTooltip(e); });
+
+// ══════════════════════════════════════════════════
+// KEYBOARD
+// ══════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  const active = document.getElementById('overlay').classList.contains('active');
+  if(active){
+    if(e.key==='Enter') confirmModal();
+    if(e.key==='Escape') closeModal();
+    return;
+  }
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  if(e.key==='n'||e.key==='N'||e.key==='ن') openAdd();
+  if(e.key==='e'||e.key==='E'||e.key==='ي') openEdit();
+  if(e.key==='Delete'||e.key==='Backspace') deleteSelected();
+  if(e.key===' '){ e.preventDefault(); centerView(); }
+  if(e.key==='Escape'){ selectedId=null; updateInfo(); render(); }
+});
+
+// ══════════════════════════════════════════════════
+// RESIZE
+// ══════════════════════════════════════════════════
+window.addEventListener('resize', render);
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+render();
+</script>
+</body>
+</html>
