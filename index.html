@@ -278,6 +278,32 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   .stat-chips-wrap .stat-chip:nth-child(n+3){display:none;}
   .minimap{display:none;}
 }
+
+/* FULLSCREEN button active state */
+.btn-fullscreen-active{color:var(--yellow)!important;border-color:rgba(255,221,0,0.4)!important;}
+
+/* PRO NODE CONTROLS */
+.node-ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px;}
+.node-ctrl-card{background:rgba(0,238,255,0.03);border:1px solid rgba(0,238,255,0.1);border-radius:5px;padding:8px 10px;}
+.node-ctrl-title{font-family:var(--mono);font-size:0.52rem;color:rgba(0,238,255,0.5);letter-spacing:2px;margin-bottom:6px;}
+.node-ctrl-val{font-family:var(--mono);font-size:0.7rem;color:var(--cyan);text-align:center;margin-top:4px;}
+
+/* PRO heat map overlay */
+.heat-legend{display:flex;gap:3px;flex-wrap:wrap;margin-top:5px;}
+.heat-chip{font-family:var(--mono);font-size:0.48rem;padding:2px 6px;border-radius:2px;color:#000;font-weight:700;}
+
+/* Timeline PRO */
+.timeline-wrap{max-height:120px;overflow-y:auto;margin-top:5px;}
+.timeline-entry{display:flex;gap:7px;align-items:flex-start;padding:4px 0;border-bottom:1px solid rgba(255,34,51,0.06);font-family:var(--mono);font-size:0.6rem;}
+.tl-time{color:var(--text-dim);flex-shrink:0;font-size:0.55rem;}
+.tl-msg{color:var(--text);flex:1;}
+
+/* PRO: node glow slider */
+.dual-slider-wrap{display:flex;flex-direction:column;gap:6px;}
+
+/* Annotation badge on canvas */
+.anno-badge{position:absolute;pointer-events:none;font-family:var(--mono);font-size:0.6rem;color:var(--yellow);background:rgba(0,0,0,0.7);border:1px solid rgba(255,221,0,0.3);padding:2px 6px;border-radius:3px;white-space:nowrap;}
+
 </style>
 </head>
 <body>
@@ -387,17 +413,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
     </div>
 
     <div class="sidebar-section">
-      <div class="sidebar-label">// نوع العقدة</div>
+      <div class="sidebar-label">// لون العقدة</div>
       <div class="type-grid" id="typeGrid">
-       <button class="type-btn active" data-type="هدف">● احمر</button>
+        <button class="type-btn active" data-type="هدف">● أحمر</button>
         <button class="type-btn" data-type="مشتبه">● برتقالي</button>
-     <button class="type-btn" data-type="IP">● سماوي</button>
+        <button class="type-btn" data-type="IP">● سماوي</button>
         <button class="type-btn" data-type="دومين">● بنفسجي</button>
-        <button class="type-btn" data-type="ملف">● اصفر</button>
-        <button class="type-btn" data-type="رابط">● اخضر</button>
+        <button class="type-btn" data-type="ملف">● أصفر</button>
+        <button class="type-btn" data-type="رابط">● أخضر</button>
         <button class="type-btn" data-type="شخص">● وردي</button>
-        <button class="type-btn" data-type="منظمة">● ازرق</button>
-
+        <button class="type-btn" data-type="منظمة">● أزرق</button>
       </div>
     </div>
 
@@ -421,6 +446,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <button class="btn btn-secondary" onclick="expandAll();closeSettingsPanel()">▼ توسيع الكل</button>
       <button class="btn btn-secondary" onclick="collapseAll();closeSettingsPanel()">▶ طي الكل</button>
       <button class="btn btn-secondary" onclick="centerView();closeSettingsPanel()">⊙ توسيط العرض</button>
+      <button class="btn btn-secondary" id="btnFullscreen" onclick="toggleFullscreen()">⛶ تكبير الشاشة</button>
     </div>
 
     <div class="sidebar-section">
@@ -453,17 +479,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
     </div>
 
     <div class="pro-section">
-      <div class="pro-label">// نوع العقدة</div>
+      <div class="pro-label">// لون العقدة</div>
       <div class="type-grid" id="typeGridPro">
-        <button class="type-btn active" data-type="هدف">● احمر</button>
-        <button class="type-btn" data-type="مشتبه">● برتقالي</button>
-     <button class="type-btn" data-type="IP">● سماوي</button>
-        <button class="type-btn" data-type="دومين">● بنفسجي</button>
-        <button class="type-btn" data-type="ملف">● اصفر</button>
-        <button class="type-btn" data-type="رابط">● اخضر</button>
-        <button class="type-btn" data-type="شخص">● وردي</button>
-        <button class="type-btn" data-type="منظمة">● ازرق</button>
-
+        <button class="type-btn active" data-type-pro="هدف">● أحمر</button>
+        <button class="type-btn" data-type-pro="مشتبه">● برتقالي</button>
+        <button class="type-btn" data-type-pro="IP">● سماوي</button>
+        <button class="type-btn" data-type-pro="دومين">● بنفسجي</button>
+        <button class="type-btn" data-type-pro="ملف">● أصفر</button>
+        <button class="type-btn" data-type-pro="رابط">● أخضر</button>
+        <button class="type-btn" data-type-pro="شخص">● وردي</button>
+        <button class="type-btn" data-type-pro="منظمة">● أزرق</button>
       </div>
     </div>
 
@@ -486,15 +511,126 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <div class="tag-filter" id="tagFilter"></div>
     </div>
 
+    <!-- ═══ حجم وإنارة العقد ═══ -->
     <div class="pro-section">
-      <div class="pro-label">// حجم العقد</div>
-      <div class="slider-row">
-        <label>الحجم</label>
-        <input type="range" id="nodeSizeSlider" min="0.5" max="2" step="0.1" value="1" oninput="updateNodeSize(this.value)"/>
-        <span id="nodeSizeVal" style="font-family:var(--mono);font-size:0.6rem;color:var(--text-dim);min-width:24px;">1×</span>
+      <div class="pro-label">// حجم العقد — الكل <span class="pro-badge">PRO</span></div>
+      <div class="dual-slider-wrap">
+        <div class="slider-row">
+          <label>الحجم</label>
+          <input type="range" id="nodeSizeSlider" min="0.25" max="3" step="0.05" value="1" oninput="updateNodeSize(this.value)"/>
+          <span id="nodeSizeVal" style="font-family:var(--mono);font-size:0.6rem;color:var(--cyan);min-width:30px;">1×</span>
+        </div>
+        <div class="slider-row">
+          <label>الإنارة</label>
+          <input type="range" id="nodeGlowSlider" min="0.25" max="3" step="0.05" value="1" oninput="updateNodeGlow(this.value)" style="background:rgba(0,238,255,0.2);"/>
+          <span id="nodeGlowVal" style="font-family:var(--mono);font-size:0.6rem;color:var(--cyan);min-width:30px;">1×</span>
+        </div>
       </div>
     </div>
 
+    <!-- ═══ تحكم بعقدة واحدة ═══ -->
+    <div class="pro-section">
+      <div class="pro-label">// تحكم بالعقدة المحددة <span class="pro-badge">PRO</span></div>
+      <div class="dual-slider-wrap">
+        <div class="slider-row">
+          <label style="font-size:0.55rem;">حجم فردي</label>
+          <input type="range" id="selNodeSizeSlider" min="0.25" max="3" step="0.05" value="1" oninput="updateSelectedNodeSize(this.value)" style="background:rgba(255,34,51,0.2);"/>
+          <span id="selNodeSizeVal" style="font-family:var(--mono);font-size:0.6rem;color:var(--red);min-width:30px;">1×</span>
+        </div>
+        <div class="slider-row">
+          <label style="font-size:0.55rem;">إنارة فردية</label>
+          <input type="range" id="selNodeGlowSlider" min="0.25" max="3" step="0.05" value="1" oninput="updateSelectedNodeGlow(this.value)" style="background:rgba(255,34,51,0.2);"/>
+          <span id="selNodeGlowVal" style="font-family:var(--mono);font-size:0.6rem;color:var(--red);min-width:30px;">1×</span>
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:0.52rem;color:var(--text-dim);margin-top:4px;opacity:0.6;">* حدد عقدة ثم حرك المنزلقات</div>
+    </div>
+
+    <!-- ═══ سرعة حركة الخطوط ═══ -->
+    <div class="pro-section">
+      <div class="pro-label">// حركة الخطوط <span class="pro-badge">PRO</span></div>
+      <div class="slider-row">
+        <label>السرعة</label>
+        <input type="range" id="animSpeedSlider" min="0.2" max="5" step="0.1" value="1" oninput="updateAnimSpeed(this.value)" style="background:rgba(204,68,255,0.2);"/>
+        <span id="animSpeedVal" style="font-family:var(--mono);font-size:0.6rem;color:var(--purple);min-width:30px;">1×</span>
+      </div>
+    </div>
+
+    <!-- ═══ فلتر العمق ═══ -->
+    <div class="pro-section">
+      <div class="pro-label">// فلتر العمق <span class="pro-badge">PRO</span></div>
+      <div class="slider-row">
+        <label>أقصى عمق</label>
+        <input type="range" id="depthFilterSlider" min="1" max="10" step="1" value="10" oninput="updateDepthFilter(this.value)" style="background:rgba(255,136,170,0.2);"/>
+        <span id="depthFilterVal" style="font-family:var(--mono);font-size:0.6rem;color:var(--pink);min-width:30px;">كل</span>
+      </div>
+      <button class="btn btn-secondary" onclick="resetDepthFilter()" style="margin-top:4px;">✕ إلغاء الفلتر</button>
+    </div>
+
+    <!-- ═══ وضع التركيز ═══ -->
+    <div class="pro-section">
+      <div class="pro-label">// وضع التركيز <span class="pro-badge">PRO</span></div>
+      <button class="btn btn-secondary" id="btnFocusMode" onclick="toggleFocusMode()">◎ تفعيل التركيز على المحددة</button>
+      <div style="font-family:var(--mono);font-size:0.52rem;color:var(--text-dim);margin-top:4px;opacity:0.6;">يعتّم كل العقد ما عدا المحددة وفروعها</div>
+    </div>
+
+    <!-- ═══ شكل الروابط ═══ -->
+    <div class="pro-section">
+      <div class="pro-label">// شكل الروابط <span class="pro-badge">PRO</span></div>
+      <div class="rel-type-grid" style="grid-template-columns:1fr 1fr;">
+        <button class="rel-btn active" data-link-style="curve" onclick="setLinkStyle('curve',this)">منحنى</button>
+        <button class="rel-btn" data-link-style="straight" onclick="setLinkStyle('straight',this)">مستقيم</button>
+        <button class="rel-btn" data-link-style="step" onclick="setLinkStyle('step',this)">متدرج</button>
+        <button class="rel-btn" data-link-style="diagonal" onclick="setLinkStyle('diagonal',this)">قطري</button>
+      </div>
+    </div>
+
+    <!-- ═══ خيارات العرض ═══ -->
+    <div class="pro-section">
+      <div class="pro-label">// خيارات العرض <span class="pro-badge">PRO</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);">
+          <input type="checkbox" id="chkShowLabels" checked onchange="toggleLabels(this.checked)" style="accent-color:var(--cyan)"/>
+          إظهار أسماء العقد
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);">
+          <input type="checkbox" id="chkShowBadges" checked onchange="toggleBadges(this.checked)" style="accent-color:var(--cyan)"/>
+          إظهار نوع العقدة
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);">
+          <input type="checkbox" id="chkShowMinimap" checked onchange="toggleMinimap(this.checked)" style="accent-color:var(--cyan)"/>
+          إظهار الخريطة المصغرة
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);">
+          <input type="checkbox" id="chkAnimDots" checked onchange="toggleAnimDots(this.checked)" style="accent-color:var(--cyan)"/>
+          تحريك النقاط على الخطوط
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);">
+          <input type="checkbox" id="chkDarkBg" onchange="toggleDarkBg(this.checked)" style="accent-color:var(--cyan)"/>
+          خلفية سوداء صافية
+        </label>
+      </div>
+    </div>
+
+    <!-- ═══ إحصاءات متقدمة ═══ -->
+    <div class="pro-section">
+      <div class="pro-label">// إحصاءات متقدمة <span class="pro-badge">PRO</span></div>
+      <div id="advancedStats" style="font-family:var(--mono);font-size:0.6rem;color:var(--text-dim);line-height:2;background:rgba(0,238,255,0.03);border:1px solid rgba(0,238,255,0.1);border-radius:4px;padding:8px 10px;">
+        اضغط تحديث لعرض الإحصاءات
+      </div>
+      <button class="btn btn-secondary" onclick="refreshAdvStats()" style="margin-top:5px;color:var(--cyan);border-color:rgba(0,238,255,0.25);">↻ تحديث الإحصاءات</button>
+    </div>
+
+    <!-- ═══ سجل التغييرات ═══ -->
+    <div class="pro-section">
+      <div class="pro-label">// سجل التغييرات <span class="pro-badge">PRO</span></div>
+      <div class="timeline-wrap" id="changeTimeline">
+        <div style="font-family:var(--mono);font-size:0.6rem;color:var(--text-dim);opacity:0.5;">لا توجد تغييرات مسجلة</div>
+      </div>
+      <button class="btn btn-secondary" onclick="clearTimeline()" style="margin-top:5px;">✕ مسح السجل</button>
+    </div>
+
+    <!-- ═══ نوع العلاقة ═══ -->
     <div class="pro-section">
       <div class="pro-label">// نوع العلاقة</div>
       <div class="rel-type-grid" id="relTypeGrid">
@@ -523,12 +659,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <button class="btn btn-secondary" onclick="expandAll();closeSettingsPanel()">▼ توسيع الكل</button>
       <button class="btn btn-secondary" onclick="collapseAll();closeSettingsPanel()">▶ طي الكل</button>
       <button class="btn btn-secondary" onclick="centerView();closeSettingsPanel()">⊙ توسيط العرض</button>
+      <button class="btn btn-secondary" id="btnFullscreenPro" onclick="toggleFullscreen()">⛶ تكبير الشاشة</button>
       <button class="btn btn-secondary" onclick="takeSnapshot()">📸 لقطة الشاشة (PNG)</button>
-    </div>
-
-    <div class="pro-section">
-      <div class="pro-label">// تقرير التحقيق</div>
-      <button class="btn" onclick="generateReport();closeSettingsPanel();" style="color:var(--yellow);border-color:rgba(255,221,0,0.25);">📋 توليد تقرير نصي</button>
     </div>
 
     <div class="pro-section">
@@ -539,6 +671,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <div class="shortcut-row"><span>طي/توسيع</span><kbd>C</kbd></div>
       <div class="shortcut-row"><span>توسيط</span><kbd>Space</kbd></div>
       <div class="shortcut-row"><span>فتح بحث</span><kbd>/</kbd></div>
+      <div class="shortcut-row"><span>تكبير شاشة</span><kbd>F</kbd></div>
     </div>
 
     <div class="pro-section">
@@ -547,6 +680,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <button class="btn" onclick="exportData()" style="color:var(--yellow);border-color:rgba(255,221,0,0.25);margin-bottom:6px;">⬇ تصدير JSON</button>
       <button class="btn" onclick="importData()" style="color:var(--cyan);border-color:rgba(0,238,255,0.25);margin-bottom:6px;">⬆ استيراد JSON</button>
       <button class="btn btn-del" onclick="resetTree()" style="margin-bottom:0;">⚠ إعادة الضبط الكامل</button>
+    </div>
+
+    <div class="pro-section">
+      <div class="pro-label">// تقرير التحقيق</div>
+      <button class="btn" onclick="generateReport();closeSettingsPanel();" style="color:var(--yellow);border-color:rgba(255,221,0,0.25);">📋 توليد تقرير نصي</button>
     </div>
   </div>
 </div>
@@ -588,9 +726,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
         <input type="text" id="inpName" placeholder="اسم العقدة..." maxlength="40" autocomplete="off"/>
       </div>
       <div class="modal-field">
-        <label>// النوع</label>
+        <label>// اللون</label>
         <select id="inpType" onchange="onTypeChange()">
-          <option value="هدف">احمر</option>
+                    <option value="هدف">احمر</option>
           <option value="مشتبه">برتقالي</option>
           <option value="IP">ازرق</option>
           <option value="دومين">بنفسجي</option>
@@ -598,8 +736,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
           <option value="رابط">اخضر</option>
           <option value="شخص">وردي</option>
           <option value="منظمة">ازرق</option>
-
-
         </select>
       </div>
       <!-- Color label -->
@@ -935,6 +1071,9 @@ function render(){
 function renderLinks(node){
   const vis=node.collapsed?[]:node.children;
   vis.forEach(child=>{
+    // Depth filter
+    if(depthFilterMax<10&&child._depth>depthFilterMax) return;
+
     const col1=TYPE_COLOR[node.type]||'#ff2233';
     const col2=TYPE_COLOR[child.type]||'#ff2233';
     const blended=blendColors(col1,col2);
@@ -942,8 +1081,14 @@ function renderLinks(node){
     const x1=node._x,y1=node._y;
     const x2=child._x,y2=child._y;
     const dx=x2-x1;
+    let d;
+    switch(linkStyle){
+      case 'straight': d=`M${x1},${y1} L${x2},${y2}`; break;
+      case 'step': d=`M${x1},${y1} H${x1+dx*0.5} V${y2} H${x2}`; break;
+      case 'diagonal': d=`M${x1},${y1} L${x1+dx*0.3},${y2} L${x2},${y2}`; break;
+      default: d=`M${x1},${y1} C${x1+dx*0.45},${y1} ${x2-dx*0.45},${y2} ${x2},${y2}`;
+    }
     const path=document.createElementNS(NS,'path');
-    const d=`M${x1},${y1} C${x1+dx*0.45},${y1} ${x2-dx*0.45},${y2} ${x2},${y2}`;
     path.setAttribute('d',d);
     path.setAttribute('fill','none');
     path.setAttribute('stroke',blended);
@@ -956,20 +1101,24 @@ function renderLinks(node){
     path.setAttribute('id',pid);
     linksG.appendChild(path);
 
-    // Animated dot along path
-    const circ=document.createElementNS(NS,'circle');
-    circ.setAttribute('r','2');
-    circ.setAttribute('fill',blended);
-    circ.setAttribute('opacity','0.7');
-    circ.setAttribute('filter','url(#neonNode)');
-    const anim=document.createElementNS(NS,'animateMotion');
-    anim.setAttribute('dur',(1.5+Math.random()).toFixed(1)+'s');
-    anim.setAttribute('repeatCount','indefinite');
-    const mp=document.createElementNS(NS,'mpath');
-    mp.setAttributeNS('http://www.w3.org/1999/xlink','href','#'+pid);
-    anim.appendChild(mp);
-    circ.appendChild(anim);
-    linksG.appendChild(circ);
+    // Animated dot along path (respects showAnimDots and animSpeedMult)
+    if(showAnimDots){
+      const circ=document.createElementNS(NS,'circle');
+      circ.setAttribute('r','2');
+      circ.setAttribute('fill',blended);
+      circ.setAttribute('opacity','0.7');
+      circ.setAttribute('filter','url(#neonNode)');
+      const anim=document.createElementNS(NS,'animateMotion');
+      const baseDur=1.5+Math.random();
+      const dur=(baseDur/animSpeedMult).toFixed(2);
+      anim.setAttribute('dur',dur+'s');
+      anim.setAttribute('repeatCount','indefinite');
+      const mp=document.createElementNS(NS,'mpath');
+      mp.setAttributeNS('http://www.w3.org/1999/xlink','href','#'+pid);
+      anim.appendChild(mp);
+      circ.appendChild(anim);
+      linksG.appendChild(circ);
+    }
 
     renderLinks(child);
   });
@@ -977,21 +1126,29 @@ function renderLinks(node){
 
 function getNodeR(node){
   const baseR=node._depth===0?22:Math.max(10,18-node._depth*2);
-  return Math.round(baseR*nodeSizeMult);
+  const perNodeMult=node._customSize||1;
+  return Math.round(baseR*nodeSizeMult*perNodeMult);
 }
 
 function renderNodes(node){
-  // Filter dim
-  const isDimmed=filterActive&&activeTypeFilter&&node.type!==activeTypeFilter&&node._depth!==0;
+  // Depth filter
+  if(depthFilterMax<10&&node._depth>depthFilterMax) return;
+
+  // Filter dim (by type)
+  const isTypeDimmed=filterActive&&activeTypeFilter&&node.type!==activeTypeFilter&&node._depth!==0;
+  // Focus mode dim
+  const isFocusDimmed=focusMode&&!isInFocusSubtree(node);
+  const isDimmed=isTypeDimmed||isFocusDimmed;
 
   const col=TYPE_COLOR[node.type]||'#ff2233';
   const isRoot=node._depth===0;
   const isSel=node.id===selectedId;
   const r=getNodeR(node);
+  const glowStrength=nodeGlowMult*(node._customGlow||1);
 
   const g=document.createElementNS(NS,'g');
   g.style.cursor='pointer';
-  if(isDimmed) g.setAttribute('opacity','0.2');
+  if(isDimmed) g.setAttribute('opacity','0.12');
 
   // Collapsed overlay
   if(node.collapsed&&node.children.length){
@@ -1027,14 +1184,14 @@ function renderNodes(node){
     g.appendChild(ring);
   }
 
-  // Glow ring
+  // Glow ring (affected by glowStrength)
   const glow=document.createElementNS(NS,'circle');
   glow.setAttribute('cx',node._x); glow.setAttribute('cy',node._y);
-  glow.setAttribute('r',r+3);
+  glow.setAttribute('r',r+3*glowStrength);
   glow.setAttribute('fill','none');
   glow.setAttribute('stroke',col);
-  glow.setAttribute('stroke-width',isSel?'2':'0.7');
-  glow.setAttribute('opacity',isSel?'0.6':'0.2');
+  glow.setAttribute('stroke-width',isSel?(2*glowStrength).toFixed(1):(0.7*glowStrength).toFixed(1));
+  glow.setAttribute('opacity',Math.min(1,isSel?0.6*glowStrength:0.2*glowStrength).toFixed(2));
   glow.setAttribute('filter','url(#neonNode)');
   g.appendChild(glow);
 
@@ -1061,33 +1218,37 @@ function renderNodes(node){
   g.appendChild(icon);
 
   // Label (below node)
-  const maxLen=11;
-  const lbl=node.name.length>maxLen?node.name.slice(0,maxLen-1)+'…':node.name;
-  const label=document.createElementNS(NS,'text');
-  label.setAttribute('x',node._x);
-  label.setAttribute('y',node._y+r+12);
-  label.setAttribute('text-anchor','middle');
-  label.setAttribute('dominant-baseline','middle');
-  label.setAttribute('font-size','10');
-  label.setAttribute('fill',col);
-  label.setAttribute('font-family',"'Cairo', sans-serif");
-  label.setAttribute('font-weight','600');
-  label.setAttribute('filter','url(#textGlow)');
-  label.setAttribute('opacity','0.9');
-  label.textContent=lbl;
-  g.appendChild(label);
+  if(showLabels){
+    const maxLen=11;
+    const lbl=node.name.length>maxLen?node.name.slice(0,maxLen-1)+'…':node.name;
+    const label=document.createElementNS(NS,'text');
+    label.setAttribute('x',node._x);
+    label.setAttribute('y',node._y+r+12);
+    label.setAttribute('text-anchor','middle');
+    label.setAttribute('dominant-baseline','middle');
+    label.setAttribute('font-size','10');
+    label.setAttribute('fill',col);
+    label.setAttribute('font-family',"'Cairo', sans-serif");
+    label.setAttribute('font-weight','600');
+    label.setAttribute('filter','url(#textGlow)');
+    label.setAttribute('opacity','0.9');
+    label.textContent=lbl;
+    g.appendChild(label);
+  }
 
   // Type badge
-  const badge=document.createElementNS(NS,'text');
-  badge.setAttribute('x',node._x);
-  badge.setAttribute('y',node._y+r+24);
-  badge.setAttribute('text-anchor','middle');
-  badge.setAttribute('dominant-baseline','middle');
-  badge.setAttribute('font-size','7');
-  badge.setAttribute('fill',`rgba(${hexToRgb(col)},0.4)`);
-  badge.setAttribute('font-family',"'Share Tech Mono', monospace");
-  badge.textContent=node.type;
-  g.appendChild(badge);
+  if(showBadges){
+    const badge=document.createElementNS(NS,'text');
+    badge.setAttribute('x',node._x);
+    badge.setAttribute('y',node._y+r+(showLabels?24:14));
+    badge.setAttribute('text-anchor','middle');
+    badge.setAttribute('dominant-baseline','middle');
+    badge.setAttribute('font-size','7');
+    badge.setAttribute('fill',`rgba(${hexToRgb(col)},0.4)`);
+    badge.setAttribute('font-family',"'Share Tech Mono', monospace");
+    badge.textContent=node.type;
+    g.appendChild(badge);
+  }
 
   // Priority dot (pro mode)
   if(node.priority&&node.priority!=='عادي'){
@@ -1162,15 +1323,15 @@ function renderNodes(node){
     });
   }
 
-  g.addEventListener('click',e=>{e.stopPropagation();selectNode(node);});
+  g.addEventListener('click',e=>{e.stopPropagation();selectNodePro(find(root,node.id));});
   g.addEventListener('dblclick',e=>{e.stopPropagation();toggleCollapse(node);});
-  g.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();selectNode(node);showCtxMenu(e.clientX,e.clientY);});
+  g.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();selectNodePro(find(root,node.id));showCtxMenu(e.clientX,e.clientY);});
   g.addEventListener('mouseenter',e=>showTooltip(e,node));
   g.addEventListener('mouseleave',hideTooltip);
 
   let pressTimer=null;
   g.addEventListener('touchstart',e=>{
-    pressTimer=setTimeout(()=>{const t=e.touches[0];selectNode(node);showCtxMenu(t.clientX,t.clientY);},600);
+    pressTimer=setTimeout(()=>{const t=e.touches[0];selectNodePro(find(root,node.id));showCtxMenu(t.clientX,t.clientY);},600);
   },{passive:true});
   g.addEventListener('touchend',()=>clearTimeout(pressTimer),{passive:true});
   g.addEventListener('touchmove',()=>clearTimeout(pressTimer),{passive:true});
@@ -1589,6 +1750,10 @@ function confirmModal(){
   closeModal();render();lsSave();
   if(selectedId) updateInfo(find(root,selectedId));
   updateTypeGrid();updateTypeGridPro();
+  // Log to timeline
+  if(modalMode==='addroot') logChange('⊕ أُضيف جذر: '+name);
+  else if(modalMode==='add') logChange('⊕ أُضيفت عقدة: '+name+' ['+type+']');
+  else if(modalMode==='edit') logChange('✎ تعديل: '+name+' ['+type+']');
 }
 
 // ══════════════════════════════════════════════════
@@ -1656,9 +1821,14 @@ function centerView(){panX=0;panY=0;zoom=1;document.getElementById('zoomPct').te
 
 function deleteSelected(){
   if(!selectedId){showNotif('اختر عقدة أولاً');return;}
-  if(root&&selectedId===root.id){root=null;selectedId=null;updateInfo();render();lsSave();return;}
+  if(root&&selectedId===root.id){
+    logChange('⊗ حُذف الجذر: '+root.name);
+    root=null;selectedId=null;updateInfo();render();lsSave();return;
+  }
   const par=findParent(root,selectedId);
   if(!par) return;
+  const delNode=find(root,selectedId);
+  logChange('⊗ حُذفت عقدة: '+(delNode?delNode.name:'—'));
   par.children=par.children.filter(c=>c.id!==selectedId);
   selectedId=par.id;
   updateInfo(par);render();lsSave();
@@ -1727,6 +1897,17 @@ function ctxCollapse(){hideCtxMenu();const n=find(root,selectedId);if(n) toggleC
 function ctxDelete(){hideCtxMenu();deleteSelected();}
 function ctxOpenLinks(){hideCtxMenu();openLinkManager();}
 document.addEventListener('click',hideCtxMenu);
+// Allow selectNodePro to be called after its deps are defined
+window.selectNodePro=function(node){
+  if(!node) return;
+  selectNode(node);
+  const szS=document.getElementById('selNodeSizeSlider');
+  const glS=document.getElementById('selNodeGlowSlider');
+  const szV=document.getElementById('selNodeSizeVal');
+  const glV=document.getElementById('selNodeGlowVal');
+  if(szS){szS.value=node._customSize||1;szV.textContent=((node._customSize)||1).toFixed(2)+'×';}
+  if(glS){glS.value=node._customGlow||1;glV.textContent=((node._customGlow)||1).toFixed(2)+'×';}
+};
 
 // ══════════════════════════════════════════════════
 // TOOLTIP
@@ -1888,6 +2069,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='c'||e.key==='C'){const n=find(root,selectedId);if(n) toggleCollapse(n);}
   if(e.key==='Delete'||e.key==='Backspace') deleteSelected();
   if(e.key===' '){e.preventDefault();centerView();}
+  if(e.key==='f'||e.key==='F') toggleFullscreen();
   if(e.key==='+'||e.key==='=') zoomIn();
   if(e.key==='-') zoomOut();
   if(e.key==='Escape'){closeSettingsPanel();hideLinkPopup();selectedId=null;updateInfo();render();}
@@ -2005,6 +2187,211 @@ async function importToken(){
   }
   btn.disabled=false;
 }
+
+// ══════════════════════════════════════════════════
+// FULLSCREEN
+// ══════════════════════════════════════════════════
+function toggleFullscreen(){
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen().then(()=>{
+      updateFullscreenBtns(true);
+      showNotif('⛶ وضع الشاشة الكاملة');
+    }).catch(()=>showNotif('تعذّر تكبير الشاشة'));
+  } else {
+    document.exitFullscreen().then(()=>updateFullscreenBtns(false));
+  }
+}
+function updateFullscreenBtns(isFs){
+  const label=isFs?'✕ إلغاء تكبير الشاشة':'⛶ تكبير الشاشة';
+  ['btnFullscreen','btnFullscreenPro'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(b){b.textContent=label;b.classList.toggle('btn-fullscreen-active',isFs);}
+  });
+}
+document.addEventListener('fullscreenchange',()=>{
+  if(!document.fullscreenElement) updateFullscreenBtns(false);
+});
+
+// ══════════════════════════════════════════════════
+// NODE GLOW (global)
+// ══════════════════════════════════════════════════
+let nodeGlowMult=1;
+function updateNodeGlow(val){
+  nodeGlowMult=parseFloat(val);
+  document.getElementById('nodeGlowVal').textContent=parseFloat(val).toFixed(2)+'×';
+  render();
+}
+
+// ══════════════════════════════════════════════════
+// PER-NODE SIZE & GLOW
+// ══════════════════════════════════════════════════
+function updateSelectedNodeSize(val){
+  if(!selectedId){showNotif('اختر عقدة أولاً');return;}
+  const node=find(root,selectedId);
+  if(!node) return;
+  node._customSize=parseFloat(val);
+  document.getElementById('selNodeSizeVal').textContent=parseFloat(val).toFixed(2)+'×';
+  render();lsSave();
+}
+function updateSelectedNodeGlow(val){
+  if(!selectedId){showNotif('اختر عقدة أولاً');return;}
+  const node=find(root,selectedId);
+  if(!node) return;
+  node._customGlow=parseFloat(val);
+  document.getElementById('selNodeGlowVal').textContent=parseFloat(val).toFixed(2)+'×';
+  render();lsSave();
+}
+// Sync sliders when node is selected
+const _origSelectNode=selectNode;
+function selectNodePro(node){
+  _origSelectNode(node);
+  const szS=document.getElementById('selNodeSizeSlider');
+  const glS=document.getElementById('selNodeGlowSlider');
+  const szV=document.getElementById('selNodeSizeVal');
+  const glV=document.getElementById('selNodeGlowVal');
+  if(szS){szS.value=node._customSize||1;szV.textContent=(node._customSize||1).toFixed(2)+'×';}
+  if(glS){glS.value=node._customGlow||1;glV.textContent=(node._customGlow||1).toFixed(2)+'×';}
+}
+
+// ══════════════════════════════════════════════════
+// ANIMATION SPEED
+// ══════════════════════════════════════════════════
+let animSpeedMult=1;
+function updateAnimSpeed(val){
+  animSpeedMult=parseFloat(val);
+  document.getElementById('animSpeedVal').textContent=parseFloat(val).toFixed(1)+'×';
+  render();
+}
+
+// ══════════════════════════════════════════════════
+// DEPTH FILTER
+// ══════════════════════════════════════════════════
+let depthFilterMax=10;
+function updateDepthFilter(val){
+  depthFilterMax=parseInt(val);
+  const el=document.getElementById('depthFilterVal');
+  el.textContent=depthFilterMax>=10?'كل':depthFilterMax+'';
+  render();
+}
+function resetDepthFilter(){
+  depthFilterMax=10;
+  const sl=document.getElementById('depthFilterSlider');
+  if(sl) sl.value=10;
+  document.getElementById('depthFilterVal').textContent='كل';
+  render();
+  showNotif('✓ تم إلغاء فلتر العمق');
+}
+
+// ══════════════════════════════════════════════════
+// FOCUS MODE
+// ══════════════════════════════════════════════════
+let focusMode=false;
+let focusNodeId=null;
+function toggleFocusMode(){
+  focusMode=!focusMode;
+  focusNodeId=focusMode?selectedId:null;
+  const btn=document.getElementById('btnFocusMode');
+  if(btn){
+    btn.textContent=focusMode?'◉ إلغاء وضع التركيز':'◎ تفعيل التركيز على المحددة';
+    btn.style.color=focusMode?'var(--yellow)':'';
+    btn.style.borderColor=focusMode?'rgba(255,221,0,0.4)':'';
+  }
+  if(focusMode&&!selectedId){showNotif('اختر عقدة أولاً');focusMode=false;if(btn){btn.textContent='◎ تفعيل التركيز على المحددة';btn.style.color='';btn.style.borderColor='';} return;}
+  render();
+  showNotif(focusMode?'◉ وضع التركيز مفعّل':'◎ وضع التركيز ملغي');
+}
+function isInFocusSubtree(node){
+  if(!focusMode||!focusNodeId) return true;
+  const fNode=find(root,focusNodeId);
+  if(!fNode) return true;
+  function inSubtree(n,target){if(n.id===target) return true;return n.children.some(c=>inSubtree(c,target));}
+  return inSubtree(fNode,node.id)||inSubtree(node,focusNodeId)||node.id===focusNodeId;
+}
+
+// ══════════════════════════════════════════════════
+// LINK STYLE
+// ══════════════════════════════════════════════════
+let linkStyle='curve';
+function setLinkStyle(style,btn){
+  linkStyle=style;
+  document.querySelectorAll('[data-link-style]').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  render();
+  showNotif('شكل الروابط: '+style);
+}
+
+// ══════════════════════════════════════════════════
+// DISPLAY TOGGLES
+// ══════════════════════════════════════════════════
+let showLabels=true,showBadges=true,showAnimDots=true,darkBgMode=false;
+function toggleLabels(v){showLabels=v;render();}
+function toggleBadges(v){showBadges=v;render();}
+function toggleMinimap(v){
+  const mm=document.getElementById('minimap');
+  if(mm) mm.style.display=v?'':'none';
+}
+function toggleAnimDots(v){showAnimDots=v;render();}
+function toggleDarkBg(v){
+  darkBgMode=v;
+  document.getElementById('bg-canvas').style.opacity=v?'0':'1';
+  document.querySelector('.scanline').style.opacity=v?'0':'1';
+  document.body.style.background=v?'#000':'';
+}
+
+// ══════════════════════════════════════════════════
+// ADVANCED STATS
+// ══════════════════════════════════════════════════
+function refreshAdvStats(){
+  const el=document.getElementById('advancedStats');
+  if(!el) return;
+  if(!root){el.textContent='لا توجد بيانات بعد.';return;}
+  const total=countNodes(root);
+  const depth=maxDepth(root)+1;
+  const links=countAllLinks(root);
+  const typeCounts={};
+  function walkTypes(n){typeCounts[n.type]=(typeCounts[n.type]||0)+1;n.children.forEach(walkTypes);}
+  walkTypes(root);
+  const typeList=Object.entries(typeCounts).map(([t,c])=>`<span style="color:${TYPE_COLOR[t]||'#fff'}">${t}:</span>${c}`).join(' ');
+  const avgChildren=total>1?((total-1)/total).toFixed(2):0;
+  const priorityCounts={};
+  function walkPrio(n){if(n.priority&&n.priority!=='عادي') priorityCounts[n.priority]=(priorityCounts[n.priority]||0)+1;n.children.forEach(walkPrio);}
+  walkPrio(root);
+  const prioList=Object.entries(priorityCounts).length?Object.entries(priorityCounts).map(([p,c])=>`${p}:${c}`).join(' | '):'لا يوجد';
+  el.innerHTML=`
+    <span style="color:var(--cyan)">إجمالي العقد:</span> ${total}<br>
+    <span style="color:var(--cyan)">أقصى عمق:</span> ${depth}<br>
+    <span style="color:var(--cyan)">إجمالي الروابط:</span> ${links}<br>
+    <span style="color:var(--cyan)">الألوان:</span> ${typeList}<br>
+    <span style="color:var(--cyan)">الأولويات:</span> ${prioList}<br>
+    <span style="color:var(--cyan)">العقد المطوية:</span> ${countCollapsed(root)}<br>
+    <span style="color:var(--cyan)">آخر تحديث:</span> ${new Date().toLocaleTimeString('ar')}
+  `;
+  showNotif('✓ تم تحديث الإحصاءات');
+}
+function countCollapsed(n){return (n.collapsed?1:0)+n.children.reduce((s,c)=>s+countCollapsed(c),0);}
+
+// ══════════════════════════════════════════════════
+// TIMELINE / CHANGE LOG
+// ══════════════════════════════════════════════════
+const changeLog=[];
+function logChange(msg){
+  const time=new Date().toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  changeLog.unshift({time,msg});
+  if(changeLog.length>50) changeLog.pop();
+  renderTimeline();
+}
+function renderTimeline(){
+  const el=document.getElementById('changeTimeline');
+  if(!el) return;
+  if(!changeLog.length){el.innerHTML='<div style="font-family:var(--mono);font-size:0.6rem;color:var(--text-dim);opacity:0.5;">لا توجد تغييرات</div>';return;}
+  el.innerHTML=changeLog.map(e=>`
+    <div class="timeline-entry">
+      <span class="tl-time">${e.time}</span>
+      <span class="tl-msg">${e.msg}</span>
+    </div>
+  `).join('');
+}
+function clearTimeline(){changeLog.length=0;renderTimeline();showNotif('✓ تم مسح السجل');}
 
 // ══════════════════════════════════════════════════
 // INIT
